@@ -7,22 +7,17 @@ import java.util.Map;
 
 public class UserDao {
 
-    // connection 정보 분리
-    private Connection makeConnection() throws SQLException, ClassNotFoundException {
-        Map<String, String> env = System.getenv();
-        //Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection conn = DriverManager.getConnection(
-                env.get("DB_HOST"), env.get("DB_USER"), env.get("DB_PASSWORD")
-        );
-        return conn;
+    // ver1. connection 정보 분리
+    // ver2. interface 실습
+    private ConnectionMaker connectionMaker = new AwsConnectionMaker();
+
+    public UserDao(ConnectionMaker connectionMaker) {
+        this.connectionMaker = connectionMaker;
     }
 
     //INSERT문
     public void add(User user) throws SQLException, ClassNotFoundException {
-        Map<String, String> env = System.getenv();
-        try{
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = makeConnection();
+            Connection conn = connectionMaker.getConnection();
             PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO users(id, name, password) VALUES (?, ?, ?)"
             );
@@ -35,18 +30,13 @@ public class UserDao {
             //db 접속 종료
             ps.close();
             conn.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     //SELECT문
-    public User findById(String id) throws ClassNotFoundException {
-        Map<String, String> env = System.getenv();
-        Connection conn;
-        try{
+    public User findById(String id) throws SQLException, ClassNotFoundException {
+
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = makeConnection();
+            Connection conn = connectionMaker.getConnection();
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM users where id = ?");
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
@@ -60,14 +50,12 @@ public class UserDao {
             conn.close();
 
             return user;
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        UserDao userDao = new UserDao();
+        UserDao userDao = new UserDao(() -> {
+            return null;
+        }); //이 코드의 의미는 ?
 
         User user = new User("13", "hj", "password");
         userDao.add(user);
