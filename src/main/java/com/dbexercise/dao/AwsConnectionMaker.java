@@ -12,8 +12,7 @@ public class AwsConnectionMaker implements ConnectionMaker{
         String dbPassword = env.get("DB_PASSWORD");
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection conn = DriverManager.getConnection(
-                "jdbc:mysql://ec2-13-125-203-31.ap-northeast-2.compute.amazonaws.com/likelion_db",
-                "root", dbPassword);
+                env.get("DB_HOST"), env.get("DB_USER"), dbPassword);
         return conn;
     }
 }
